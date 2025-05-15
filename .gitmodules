@@ -1,0 +1,3 @@
+[submodule "tmux-zoxide-session"]
+	path = tmux-zoxide-session
+	url = https://github.com/jeffnguyen695/tmux-zoxide-session
