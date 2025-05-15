@@ -7,18 +7,6 @@ bind r source-file ~/.config/tmux/tmux.conf
 # display-message "Config reloaded..."
 
 #---------------------------------------------------------------------
-# Enable 256-color and true-color (24-bit) support in tmux
-#---------------------------------------------------------------------
-
-# set -g default-terminal "tmux-256color"
-
-set-option -g default-terminal 'screen-256color' # Set terminal type for 256-color support
-set-option -g terminal-overrides ',*256col*:Tc' # Override to enable true-color for compatible terminals
-
-
-# set-option -g terminal-overrides ',xterm-256color:RGB'
-
-#---------------------------------------------------------------------
 # General Options
 #---------------------------------------------------------------------
 
@@ -33,13 +21,16 @@ set-option -g status-position top # Set status bar on top
 set -g default-shell /bin/zsh # Use Zsh as default
 set -g repeat-time 1000 
 
+# set -g default-terminal "tmux-256color"
+set-option -g default-terminal 'screen-256color'
+set-option -g terminal-overrides ',xterm-256color:RGB'
+
 set -g set-clipboard on         # Use system clipboard
 set -g detach-on-destroy off    # Don't exit from tmux when closing a session
-set -g mouse on                 # Enable mouse support
-set -g status-interval 3        # Update status bas every 3 seconds (default is 15)
 set -g escape-time 0            # Remove delay for exiting insert mode with ESC in Neovim
 set -g history-limit 1000000    # Increase history size (from 2,000)
 
+set -g status-interval 3        # Update the status bar every 3 seconds (default: 15 seconds)
 set -g allow-passthrough on   # Allow programs in the pane to bypass tmux (e.g. for image preview)
 
 set -g renumber-windows on # Automatically renumber windows when one is clos
@@ -77,8 +68,9 @@ bind -r h resize-pane -L 5
 bind -r j resize-pane -D 5
 bind -r k resize-pane -U 5
 bind -r l resize-pane -R 5
-# bind -r m resize-pane -Z # Use m key to maximize pane (Zoom)
 
+# Use m key to maximize pane (Zoom)
+bind -r m resize-pane -Z
 
 # split pane bindings
 bind '-' split-window -v -c "#{pane_current_path}"
@@ -92,7 +84,7 @@ set-window-option -g mode-keys vi
 bind-key -T copy-mode-vi 'v' send -X begin-selection 
 
 # Copy text with "y"
-# bind -T copy-mode-vi 'y' send-keys -X copy-pipe-and-cancel "pbcopy"
+bind -T copy-mode-vi 'y' send-keys -X copy-pipe-and-cancel "pbcopy"
 
 # Paste yanked text with "Prefix + P" ("Prefix + p" goes to previous window)
 bind P paste-buffer
@@ -101,6 +93,45 @@ bind P paste-buffer
 unbind -T copy-mode-vi MouseDragEnd1Pane
 
 
+
+#---------------------------------------------------------------------
+# Floating pane settings
+#---------------------------------------------------------------------
+
+# Setting the main key to toggle the floating pane on and off
+set -g @floax-bind '-n M-p'
+
+# When the pane is toggled, using this bind pops a menu with additional options
+# such as resize, fullscreen, resetting to defaults and more.
+set -g @floax-bind-menu 'P'
+
+# The default width and height of the floating pane
+set -g @floax-width '80%'
+set -g @floax-height '80%'
+
+# The border color can be changed, these are the colors supported by Tmux:
+# black, red, green, yellow, blue, magenta, cyan, white for the standard
+# terminal colors; brightred, brightyellow and so on for the bright variants;
+# colour0/color0 to colour255/color255 for the colors from the 256-color
+# palette; default for the default color; or a hexadecimal RGB color such as #882244.
+set -g @floax-border-color 'red'
+
+# The text color can also be changed, by default it's blue 
+# to distinguish from the main window
+# Optional colors are as shown above in @floax-border-color
+set -g @floax-text-color 'blue'
+
+# By default when floax sees a change in session path 
+# it'll change the floating pane's path to disable this
+# set it to false. You could also "cd -" when the pane is toggled to go back
+set -g @floax-change-path 'true'
+
+# The default session name of the floating pane is 'scratch'
+# You can modify the session name with this option:
+# set -g @floax-session-name 'some-other-session-name'
+
+# Change the title of the floating window
+set -g @floax-title 'floax'
 
 
 #---------------------------------------------------------------------
@@ -111,6 +142,7 @@ set -g @plugin 'tmux-plugins/tmux-sensible'
 set -g @plugin 'tmux-plugins/tmux-resurrect' # saves all the little details from your tmux environment to be restored restart
 set -g @plugin 'tmux-plugins/tmux-continuum' # Allows for  continuous saving of tmux environment
 set -g @plugin 'jimeh/tmuxifier' # Create, edit, manage and load complex Tmux session, window and pane configurations with ease.
+set -g @plugin 'omerxx/tmux-floax' # Allows for a 'floating' pane to be accessed
 set -g @plugin 'omerxx/tmux-sessionx' # Allows for the management of sessions easily
 set -g @plugin 'christoomey/vim-tmux-navigator' # allows to navigate seamlessly between vim and tmux
 set -g @plugin 'tmux-plugins/tmux-yank' # Allows synchronizing clipboards of nvim & tmux with other systems/connections.
@@ -120,29 +152,21 @@ set -g @plugin 'fcsonline/tmux-thumbs'
 set -g @plugin 'wfxr/tmux-fzf-url'
 set -g @plugin 'hendrikmi/tmux-cpu-mem-monitor' # CPU and memory info
 
+#set -g @plugin 'omerxx/catppuccin-tmux' # My fork that holds the meetings script bc I'm lazy af
 
-bg="#3B4252"
-default_fg="#D8DEE9" 
-session_fg="#A3BE8C"
-session_selection_fg="#3B4252"
-session_selection_bg="#81A1C1"
-active_window_fg="#88C0D0"
-active_pane_border="#abb2bf"
 
-set -g status-left-length 300   # default: 10
-set -g status-right-length 300  # default: 10
-set -g status-left "#[fg=${session_fg},bold,bg=${bg}]  #S"
-set -g status-right "#{ battery -p } |  #{ cpu -i 10 } |  #{ mem -t } "
-set -g status-justify centre
-set -g status-style "bg=${bg}"
-set -g window-status-format "#[fg=${default_fg},bg=default] #I:#W"
-set -g window-status-current-format "#[fg=${active_window_fg},bg=default]  #I:#W"
-set -g window-status-last-style "fg=${default_fg},bg=default"
-set -g message-command-style "bg=default,fg=${default_fg}"
-set -g message-style "bg=default,fg=${default_fg}"
-set -g mode-style "bg=${session_selection_bg},fg=${session_selection_fg}"
-set -g pane-active-border-style "fg=${active_pane_border},bg=default"
-set -g pane-border-style "fg=brightblack,bg=default"
+set -g @floax-width '80%'
+set -g @floax-height '80%'
+set -g @floax-border-color 'magenta'
+set -g @floax-text-color 'blue'
+set -g @floax-bind 'p'
+set -g @floax-change-path 'true'
+set -g @sessionx-bind-zo-new-window 'ctrl-y'
+set -g @sessionx-auto-accept 'off'
+# set -g @sessionx-custom-paths '/Users/omerxx/dotfiles'
+set -g @sessionx-bind 'o'
+
+#set -g @sessionx-x-path '~/dotfiles'
 
 set -g @sessionx-window-height '85%'
 set -g @sessionx-window-width '75%'
@@ -154,8 +178,72 @@ set -g @sessionx-filter-current 'false'
 set -g @continuum-restore 'on'
 set -g @resurrect-strategy-nvim 'session'
 
+# Load theme
+if-shell "[[ \"$TMUX_THEME\" == \"onedark\" ]]" 'source-file ~/.config/tmux/onedark-theme.conf' ""
+if-shell "[[ \"$TMUX_THEME\" == \"nord\" ]]" 'source-file ~/.config/tmux/nord-theme.conf' ""
+
 # Resurrect
 set -g @resurrect-capture-pane-contents 'on'
+
+
+
+#set -g @catppuccin_window_left_separator ""
+#set -g @catppuccin_window_right_separator " "
+#set -g @catppuccin_window_middle_separator " █"
+#set -g @catppuccin_window_number_position "right"
+#set -g @catppuccin_window_default_fill "number"
+#set -g @catppuccin_window_default_text "#W"
+#set -g @catppuccin_window_current_fill "number"
+#set -g @catppuccin_window_current_text "#W#{?window_zoomed_flag,(),}"
+#set -g @catppuccin_status_modules_right "directory date_time"
+#set -g @catppuccin_status_modules_left "session"
+#set -g @catppuccin_status_left_separator  " "
+#set -g @catppuccin_status_right_separator " "
+#set -g @catppuccin_status_right_separator_inverse "no"
+#set -g @catppuccin_status_fill "icon"
+#set -g @catppuccin_status_connect_separator "no"
+#set -g @catppuccin_directory_text "#{b:pane_current_path}"
+# set -g @catppuccin_meetings_text "#($HOME/.config/tmux/scripts/cal.sh)"
+#set -g @catppuccin_date_time_text "%H:%M"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# References
+# https://github.com/omerxx/tmux-floax
+# https://github.com/jimeh/tmuxifier
+# https://github.com/omerxx/tmux-sessionx
+# https://github.com/christoomey/vim-tmux-navigator
+# https://github.com/tmux-plugins/tmux-yank
+# https://github.com/tmux-plugins/tmux-continuum
+# https://github.com/tmux-plugins/tmux-resurrect
+# https://github.com/tmux-plugins/tmux-sensible
+# https://github.com/janoamaral/tokyo-night-tmux
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #---------------------------------------------------------------------
